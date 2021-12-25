@@ -1,15 +1,16 @@
 import React from "react";
 import Todo from "./Todo";
 import AddTodo from "./AddTodo";
-import { Paper, List, Container } from "@material-ui/core";
+import { Paper, List, Container, Grid, Button, AppBar, Toolbar, Typography } from "@material-ui/core";
 import './App.css';
-import { call } from './service/ApiService';
+import { call, signout } from './service/ApiService';
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       items: [],
+      loading: true,
     };
   }
   /*
@@ -56,7 +57,7 @@ class App extends React.Component {
 
   componentDidMount() {
     call("/todo", "GET", null).then((response) =>
-      this.setState({ items: response.data })
+      this.setState({ items: response.data, loading : false })
     );
   }
 
@@ -73,8 +74,8 @@ class App extends React.Component {
   };
 
   update = (item) => {
-    call("/todo","PUT", item).then((response)=>
-      this.setState({items: response.data})
+    call("/todo", "PUT", item).then((response) =>
+      this.setState({ items: response.data })
     )
   }
 
@@ -83,25 +84,56 @@ class App extends React.Component {
       <Paper style={{ margin: 16 }}>
         <List>
           {this.state.items.map((item, idx) => (
-            <Todo 
-            item={item} 
-            key={item.id} 
-            delete={this.delete} 
-            update={this.update}
+            <Todo
+              item={item}
+              key={item.id}
+              delete={this.delete}
+              update={this.update}
             />
           ))}
         </List>
       </Paper>
     );
 
-    return (
+    //navigationBar 추가
+    var navigationBar = (
+      <AppBar position="static">
+        <Toolbar>
+          <Grid justify="space-between" container>
+            <Grid item>
+              <Typography variant="h6">오늘의 할일</Typography>
+            </Grid>
+            <Grid>
+              <Button color="inherit" onClick={signout}>
+                  로그아웃
+              </Button>
+            </Grid>
+          </Grid>
+        </Toolbar>
+      </AppBar>
+    )
+
+    // 로딩중 아닐때
+    var todoListPage = (
       <div className="App">
+        {navigationBar}
         <Container maxWidth="md">
           <AddTodo add={this.add} />
           <div className="TodoList">{todoItems}</div>
         </Container>
       </div>
-    )
+    );
+
+    // 로딩중일때
+    var loadingPage = <h1> 로딩중... </h1>
+
+    var content = loadingPage;
+
+    if(!this.state.loading){
+      content = todoListPage;
+    }
+
+    return <div className="App">{content}</div>
   }
 }
 export default App;
